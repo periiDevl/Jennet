@@ -6,6 +6,7 @@ private:
     bytes_2 checksum();
 
 public:
+    IPV4_HEADER header;
     IPV4();
     ~IPV4();
 };
