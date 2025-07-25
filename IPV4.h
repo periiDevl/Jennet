@@ -1,9 +1,10 @@
 #pragma once
 #include"IPV4_HEADER.h"
-class IPV4
+#include"Protocol.h"
+class IPV4 : public Protocol
 {
 private:
-    bytes_2 checksum();
+
 
 public:
     IPV4_HEADER header;
@@ -13,8 +14,10 @@ public:
 
 IPV4::IPV4()
 {
+
 }
 
 IPV4::~IPV4()
 {
+    
 }
