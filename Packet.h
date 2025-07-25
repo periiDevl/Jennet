@@ -2,27 +2,18 @@
 #include "iostream"
 #include "Defng.h"
 #include <cstring>
-
+#include <pcap.h>
 class Packet
 {
 private:
-    void allocatePacketBuffer(size_t pkSize);
+    size_t currectReservedSize = 0;
 public:
+    void reserve(size_t size){currectReservedSize += size;}
+    size_t getReserve(){return currectReservedSize;}
     byte* packet;
     size_t pktSize;
-    //virtual void deliver();
+    int send(pcap_t* handle);
     Packet(size_t packetSize);
     ~Packet();
 };
 
-Packet::Packet(size_t packetSize)
-{
-    pktSize = packetSize;
-    packet = new byte[packetSize];
-    memset(packet, 0, packetSize);
-}
-
-Packet::~Packet()
-{
-    delete[] packet;
-}
