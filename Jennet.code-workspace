@@ -5,6 +5,10 @@
 		}
 	],
 	"settings": {
-		"workbench.colorTheme":"Best Themes - Horizon"
+		"workbench.colorTheme": "Best Themes - Horizon",
+		"files.associations": {
+			"type_traits": "cpp",
+			"cstddef": "cpp"
+		}
 	}
 }

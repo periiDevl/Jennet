@@ -5,8 +5,8 @@
 class Protocol
 {
 protected:
-    virtual void calculateAndSetChecksum(IPV4_HEADER& header);
     virtual bytes_2 internetChecksum(const void* data, size_t length);
+    virtual void applyChecksum();
 public:
     Protocol();
     ~Protocol();

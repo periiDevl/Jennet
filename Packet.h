@@ -1,18 +1,28 @@
 #pragma once
+#include "iostream"
+#include "Defng.h"
+#include <cstring>
+
 class Packet
 {
 private:
-    void allocatePacketBuffer(); //sizeof header + ... + ...
+    void allocatePacketBuffer(size_t pkSize);
 public:
-    virtual void deliver();
-    Packet(/* args */);
+    byte* packet;
+    size_t pktSize;
+    //virtual void deliver();
+    Packet(size_t packetSize);
     ~Packet();
 };
 
-Packet::Packet(/* args */)
+Packet::Packet(size_t packetSize)
 {
+    pktSize = packetSize;
+    packet = new byte[packetSize];
+    memset(packet, 0, packetSize);
 }
 
 Packet::~Packet()
 {
+    delete[] packet;
 }

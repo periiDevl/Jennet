@@ -8,8 +8,10 @@ private:
 
 public:
     IPV4_HEADER header;
+    
     IPV4();
     ~IPV4();
+    void applyChecksum() override;
 };
 
 IPV4::IPV4()

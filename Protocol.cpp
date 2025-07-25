@@ -1,12 +1,13 @@
 #include"Protocol.h"
-Protocol::Protocol() {}
+#include"cassert"
 
-Protocol::~Protocol() {}
-#include "Protocol.h"
+Protocol::Protocol() {
+}
 
-void Protocol::calculateAndSetChecksum(IPV4_HEADER& header) {
-    header.Hchecksum = 0;
-    header.Hchecksum = internetChecksum(&header, sizeof(header));
+Protocol::~Protocol() {
+}
+void Protocol::applyChecksum() {
+    std::cout << "PROTOCOL CLASS DOES NOT HAVE A CHECKSUM FUNCTION" << std::endl;
 }
 
 

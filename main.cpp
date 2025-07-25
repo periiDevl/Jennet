@@ -3,10 +3,11 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <cstdint>
-
+#include"Packet.h"
 #include "EthernetHeader.h"
 #include "IPV4_HEADER.h"
 #include "ICMP_HEADER.h"
+
 
 bytes_2 calculateChecksum(bytes_2* data, size_t length) {
     uint32_t sum = 0;
@@ -23,12 +24,8 @@ bytes_2 calculateChecksum(bytes_2* data, size_t length) {
 }
 
 int main() {
-    ETHERNET_HEADER ethernetHeader{};
-    IPV4_HEADER ipv4Header{};
-    ICMP_HEADER icmpHeader{};
-
-    std::cout << "Jennet says Blud" << std::endl;
-
+    std::cout << "Jennet says HELLO" << std::endl;
+    
     const char* device = "enp11s0";
     char errbuf[PCAP_ERRBUF_SIZE]{};
     pcap_t* handle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
@@ -36,13 +33,15 @@ int main() {
         std::cerr << "Failed to open device: " << errbuf << "\n";
         return 1;
     }
-
+    /*
     const size_t packetSize = sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + sizeof(ICMP_HEADER);
     byte packet[packetSize];
     memset(packet, 0, packetSize);
+    */
+    Packet pkt(sizeof(ETHERNET_HEADER)+sizeof(IPV4_HEADER)+sizeof(ICMP_HEADER));
 
 
-    ETHERNET_HEADER* eth = (ETHERNET_HEADER*)packet;
+    ETHERNET_HEADER* eth = (ETHERNET_HEADER*)pkt.packet;
     byte dstMac[6] = {0x08, 0x00, 0x27, 0xaa, 0xbb, 0xcc};
     byte srcMac[6] = {0x08, 0x00, 0x27, 0xdd, 0xee, 0xff};
 
@@ -51,7 +50,7 @@ int main() {
     eth->ethernetType = htons(0x0800);
 
 
-    IPV4_HEADER* ip = (IPV4_HEADER*)(packet + sizeof(ETHERNET_HEADER));
+    IPV4_HEADER* ip = (IPV4_HEADER*)(pkt.packet + sizeof(ETHERNET_HEADER));
     ip->version_IHL = (4 << 4) | (sizeof(IPV4_HEADER) / 4);
     ip->TOS = 0;
     ip->totalLen = htons(sizeof(IPV4_HEADER) + sizeof(ICMP_HEADER));
@@ -60,12 +59,12 @@ int main() {
     ip->TTL = 64;
     ip->protocol = 1;
     ip->sendersIP = inet_addr("127.0.0.1");
-    ip->reciveIP = inet_addr("10.0.0.1 ");
+    ip->reciveIP = inet_addr("10.0.0.1");
     ip->Hchecksum = 0;
     ip->Hchecksum = calculateChecksum((bytes_2*)ip, sizeof(IPV4_HEADER));
 
 
-    ICMP_HEADER* icmp = (ICMP_HEADER*)(packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
+    ICMP_HEADER* icmp = (ICMP_HEADER*)(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
     icmp->type = 8;  // Echo Request
     icmp->code = 0;
     icmp->extendedHeader = 0x12340001; 
@@ -73,7 +72,7 @@ int main() {
     icmp->checksum = calculateChecksum((bytes_2*)icmp, sizeof(ICMP_HEADER));
 
     
-    if (pcap_sendpacket(handle, packet, packetSize) != 0) {
+    if (pcap_sendpacket(handle, pkt.packet, pkt.pktSize) != 0) {
         std::cerr << "Failed to send packet: " << pcap_geterr(handle) << "\n";
         pcap_close(handle);
         return 1;
