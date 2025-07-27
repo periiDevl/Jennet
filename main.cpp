@@ -9,20 +9,6 @@
 #include"Protocol.h"
 #include"TerminalInterface/ASCIIART.h"
 #include"InternetUtils.h"
-bytes_2 calculateChecksum(bytes_2* data, size_t length) {
-    uint32_t sum = 0;
-    while (length > 1) {
-        sum += *data++;
-        length -= 2;
-    }
-    if (length == 1) {
-        sum += *(byte*)data;
-    }
-    while (sum >> 16)
-        sum = (sum & 0xFFFF) + (sum >> 16);
-    return ~sum;
-}
-
 int main() {
     if (isMachineBigEndian() == 1){
         std::cout << "Yes";
@@ -30,7 +16,7 @@ int main() {
         std::cout << "No";
     }
     std::cout << "Jennet says HELLO" << std::endl;
-    //printAscii();
+    printAscii();
     const char* device = "enp11s0";
     char errbuf[PCAP_ERRBUF_SIZE]{};
     pcap_t* handle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
