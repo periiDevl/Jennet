@@ -9,7 +9,7 @@ protected:
     virtual bytes_2 internetChecksum(const void* data, size_t length){
         bytes_4 sum = 0;
         const bytes_2* ptr = reinterpret_cast<const bytes_2*>(data);
-
+        
         while (length > 1) {
             sum += *ptr++;
             length -= 2;

@@ -1,5 +1,4 @@
 #include <pcap.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include <cstring>
 #include <cstdint>
@@ -9,6 +8,7 @@
 #include"ICMP/ICMP.h"
 #include"Protocol.h"
 #include"TerminalInterface/ASCIIART.h"
+#include"InternetUtils.h"
 bytes_2 calculateChecksum(bytes_2* data, size_t length) {
     uint32_t sum = 0;
     while (length > 1) {
@@ -24,6 +24,11 @@ bytes_2 calculateChecksum(bytes_2* data, size_t length) {
 }
 
 int main() {
+    if (isMachineBigEndian() == 1){
+        std::cout << "Yes";
+    } else {
+        std::cout << "No";
+    }
     std::cout << "Jennet says HELLO" << std::endl;
     //printAscii();
     const char* device = "enp11s0";
@@ -46,20 +51,20 @@ int main() {
     
     memcpy(eth->dstMac, dstMac, 6);
     memcpy(eth->srcMac, srcMac, 6);
-    eth->ethernetType = htons(0x0800);
+    eth->ethernetType = convertToBigEndian(0x0800);
     
     pkt.reserve(sizeof(ETHERNET_HEADER));
     IPV4 ivp4;
     ivp4.include(pkt);
     ivp4.header->version_IHL = (4 << 4) | (sizeof(IPV4_HEADER) / 4);
     ivp4.header->TOS = 0;
-    ivp4.header->totalLen = htons(sizeof(IPV4_HEADER) + sizeof(ICMP_HEADER));
-    ivp4.header->id = htons(0x1234);
-    ivp4.header->flags_fragmentOffset = htons(0);
+    ivp4.header->totalLen = convertToBigEndian(sizeof(IPV4_HEADER) + sizeof(ICMP_HEADER));
+    ivp4.header->id = convertToBigEndian(0x1234);
+    ivp4.header->flags_fragmentOffset = convertToBigEndian(0);
     ivp4.header->TTL = 64;
     ivp4.header->protocol = 1;
-    ivp4.header->sendersIP = inet_addr("10.0.0.103");
-    ivp4.header->reciveIP = inet_addr("10.0.0.51");
+    ivp4.header->sendersIP = v4addr("10.0.0.103");
+    ivp4.header->reciveIP = v4addr("10.0.0.51");
     ivp4.applyChecksum();
 
     pkt.reserve(sizeof(IPV4_HEADER));
