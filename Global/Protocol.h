@@ -1,7 +1,6 @@
 
 #pragma once
 #include"Defng.h"
-#include"IPV4_HEADER.h"
 #include"Packet.h"
 template <typename HeaderType>
 class Protocol
@@ -34,7 +33,7 @@ public:
     void include(Packet& packet)
     {
         header = reinterpret_cast<HeaderType*>(packet.packet + packet.getReserve());
-        packet.reserve(sizeof(HeaderType));
+        //packet.reserve(sizeof(HeaderType));
     }
     Protocol(){};
     ~Protocol(){};

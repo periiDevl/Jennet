@@ -5,10 +5,10 @@
 #include <cstdint>
 #include"Packet.h"
 #include "EthernetHeader.h"
-#include "IPV4_HEADER.h"
-#include "ICMP_HEADER.h"
-#include "Protocol.h"
-#include"IPV4.h"
+#include"IP/IPV4.h"
+#include"ICMP/ICMP.h"
+#include"Protocol.h"
+#include"TerminalInterface/ASCIIART.h"
 bytes_2 calculateChecksum(bytes_2* data, size_t length) {
     uint32_t sum = 0;
     while (length > 1) {
@@ -25,7 +25,7 @@ bytes_2 calculateChecksum(bytes_2* data, size_t length) {
 
 int main() {
     std::cout << "Jennet says HELLO" << std::endl;
-    
+    //printAscii();
     const char* device = "enp11s0";
     char errbuf[PCAP_ERRBUF_SIZE]{};
     pcap_t* handle = pcap_open_live(device, BUFSIZ, 1, 1000, errbuf);
@@ -61,16 +61,15 @@ int main() {
     ivp4.header->sendersIP = inet_addr("10.0.0.103");
     ivp4.header->reciveIP = inet_addr("10.0.0.51");
     ivp4.applyChecksum();
-    /*
-    ivp4->Hchecksum = 0;
-    ivp4->Hchecksum = calculateChecksum((bytes_2*)ip, sizeof(IPV4_HEADER));
-    */
-    ICMP_HEADER* icmp = (ICMP_HEADER*)(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
-    icmp->type = 8;  // Echo Request
-    icmp->code = 0;
-    icmp->extendedHeader = 0x12340001; 
-    icmp->checksum = 0;
-    icmp->checksum = calculateChecksum((bytes_2*)icmp, sizeof(ICMP_HEADER));
+
+    pkt.reserve(sizeof(IPV4_HEADER));
+    ICMP icmp;
+    icmp.include(pkt);
+    //ICMP_HEADER* icmp = (ICMP_HEADER*)(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
+    icmp.header->type = 8;  // Echo Request
+    icmp.header->code = 0;
+    icmp.header->extendedHeader = 0x12340001; 
+    icmp.applyChecksum();
 
     
     if (pkt.send(handle) != 0) {

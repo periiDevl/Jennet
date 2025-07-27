@@ -15,16 +15,14 @@ public:
 
 IPV4::IPV4()
 {
-    
 }
 
 IPV4::~IPV4()
 {
-
 }
 void IPV4::applyChecksum()
 {
     header->Hchecksum = 0;
-    header->Hchecksum = internetChecksum(&header, sizeof(header));
+    header->Hchecksum = internetChecksum(header, sizeof(header));
 }
 
