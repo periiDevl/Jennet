@@ -2,7 +2,7 @@
 
 echo "Compiling Jennet..."
 
-PCAPPP_DIR=~/Documents/Projects/Jennet
+PCAPPP_DIR=/media/jon/DevStorage/Jennet
 
 g++ -o jnet *.cpp \
   -I "$PCAPPP_DIR/include/pcapplusplus" \

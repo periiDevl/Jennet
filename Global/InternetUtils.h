@@ -16,6 +16,15 @@ bytes_2 convertToBigEndian(bytes_2 value){
     }
     return value;
 }
+bytes_2 switchbo16(bytes_2 value){ //Switch byte order
+    return (value >> 8) | (value << 8);
+}
+bytes_4 switchbo32(bytes_4 value){ //Switch byte order 32
+        return  ((value & 0x000000FF) << 24) | 
+            ((value & 0x0000FF00) << 8)  | 
+            ((value & 0x00FF0000) >> 8)  | 
+            ((value & 0xFF000000) >> 24);
+} //Im using the masks to extract the bytes
 bytes_4 v4addr(std::string ip) {
     bytes_4 addressInBytes = 0;
     byte* pointer = reinterpret_cast<byte*>(&addressInBytes);
@@ -31,5 +40,5 @@ bytes_4 v4addr(std::string ip) {
         }
     }
 
-    return addressInBytes;
+    return isMachineBigEndian() ? switchbo32(addressInBytes)  : addressInBytes;
 }
