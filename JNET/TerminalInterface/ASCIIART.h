@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-void print_side_by_side_green(const std::vector<std::string>& left_art,
+inline void print_side_by_side_green(const std::vector<std::string>& left_art,
                              const std::vector<std::string>& right_art,
                              int gap = 0) {
     std::string spacer(gap, ' ');
@@ -20,7 +20,7 @@ void print_side_by_side_green(const std::vector<std::string>& left_art,
     }
 }
 
-void printAscii() {
+inline void printAscii() {
     std::vector<std::string> new_image = {
         "                         ",
         "            ▒▒░          ",

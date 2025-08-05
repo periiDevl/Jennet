@@ -2,11 +2,14 @@
 
 echo "Compiling Jennet..."
 
-PCAPPP_DIR=/media/jon/DevStorage/Jennet
+PCAPPP_DIR=~/Documents/Projects/Jennet
 
-g++ -o jnet *.cpp \
+# Collect all .cpp files recursively (including subdirs)
+SRC_FILES=$(find . -name '*.cpp')
+
+g++ -o jnet $SRC_FILES \
   -I "$PCAPPP_DIR/include/pcapplusplus" \
-  -I "./Global" \
+  -I "./JNET" \
   "$PCAPPP_DIR/lib/libPcap++.a" \
   "$PCAPPP_DIR/lib/libPacket++.a" \
   "$PCAPPP_DIR/lib/libCommon++.a" \
