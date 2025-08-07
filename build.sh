@@ -2,10 +2,13 @@
 
 echo "Compiling Jennet..."
 
-PCAPPP_DIR=~/Documents/Projects/Jennet
+PCAPPP_DIR=~/Documents/GitHub/Jennet
 
 # Collect all .cpp files recursively (including subdirs)
 SRC_FILES=$(find . -name '*.cpp')
+
+echo "Source files found:"
+echo "$SRC_FILES"
 
 g++ -o jnet $SRC_FILES \
   -I "$PCAPPP_DIR/include/pcapplusplus" \

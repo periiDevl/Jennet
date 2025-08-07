@@ -48,6 +48,7 @@ protected:
     }
     virtual void applyChecksum(){
         std::cout << "PROTOCOL CLASS DOES NOT HAVE CHECKSUM";}
+
 public:
     HeaderType* header = nullptr;
 

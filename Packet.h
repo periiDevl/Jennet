@@ -3,6 +3,7 @@
 #include "Defng.h"
 #include <cstring>
 #include <pcap.h>
+#include"Handler.h"
 class Packet
 {
 private:
@@ -12,7 +13,7 @@ public:
     size_t getReserve(){return currectReservedSize;}
     byte* packet;
     size_t pktSize;
-    int send(pcap_t* handle);
+    int send(Handler hnd);
     Packet(size_t packetSize);
     ~Packet();
 };

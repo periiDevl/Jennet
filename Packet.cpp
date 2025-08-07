@@ -10,6 +10,6 @@ Packet::~Packet()
 {
     delete[] packet;
 }
-int Packet::send(pcap_t* handle){
-    return pcap_sendpacket(handle, packet, pktSize);
+int Packet::send(Handler hnd){
+    return pcap_sendpacket(hnd.get(), packet, pktSize);
 }
