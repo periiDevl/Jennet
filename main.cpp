@@ -1,68 +1,70 @@
-#include <pcap.h>
-#include <iostream>
-#include <cstring>
-#include <cstdint>
-#include <chrono>
-#include <vector>
-#include "Packet.h"
-#include "EthernetHeader.h"
-#include "IP/IPV4.h"
-#include "TCP/TCP.h"
-#include "TCP/TCP_FLAGS.h"
-#include "Testing.h"
-#include "InternetUtils.h"
-#include"ARP/ARP.h"
-#include"Handler.h"
+#include <QApplication>
+#include <QMainWindow>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QString>
+#include <QWidget>
 
-int main() {
-    Handler handler("wlo1");
+// Function to display text at a given position and size
+void displayText(QWidget *parent, const QString &text, int x, int y, int width, int height) {
+    QLabel *label = new QLabel(text, parent);
+    label->move(x, y); // Set position
+    label->resize(width, height); // Set size
+    label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    label->show();
+}
+// Function to create and display a QLineEdit, returns pointer so caller can get text later
+QLineEdit* createTextBox(QWidget* parent, int x, int y, int width, int height) {
+    QLineEdit* textBar = new QLineEdit(parent);
+    textBar->move(x, y);
+    textBar->resize(width, height);
+    textBar->show();
+    return textBar;
+}
+void createVerticalLine(QWidget* parent, int x, int y, int height) {
+    QFrame* vLine = new QFrame(parent);
+    vLine->setFrameShape(QFrame::VLine);
+    vLine->setFrameShadow(QFrame::Sunken);
+    vLine->setLineWidth(2);    // thickness
+    vLine->setMidLineWidth(1);
+    vLine->move(x, y);
+    vLine->resize(2, height);  // fixed width=2, variable height
+    vLine->show();
+}
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
 
-    MacGetter mg(handler.getInterface());
+    QMainWindow mainWindow;
+    mainWindow.setWindowTitle("Jennet - Jonathan Perii");
+    mainWindow.setFixedSize(800, 500);
 
-    byte srcMac[6]{};
-    if (!mg.getInterfaceMac(srcMac)) {
-        std::cerr << "Failed to get interface MAC\n";
-        handler.close();
-        return 1;
-    }
+    QWidget *centralWidget = new QWidget(&mainWindow);
 
-    std::string gwIP = mg.getDefaultGatewayIP();
-    if (gwIP.empty()) {
-        std::cerr << "Failed to get default gateway IP\n";
-        handler.close();
-        return 1;
-    }
+    displayText(&mainWindow, "Interface :", 10, 10, 300, 30);
+    QLineEdit* InterfaceTextbox = createTextBox(centralWidget, 10, 40, 250, 30);
+    
+    displayText(&mainWindow, "Source IP", 10, 70 + 10, 300, 30);
+    QLineEdit* srcIPTextbox = createTextBox(centralWidget, 10, 110, 250, 30);
+    displayText(&mainWindow, "Source MAC (12 Hex digits)", 10, 140, 300, 30);
+    QLineEdit* srcMACTextbox = createTextBox(centralWidget, 10, 170, 250, 30);
+    
+    displayText(&mainWindow, "Dst IP", 10, 200, 300, 30);
+    QLineEdit* dstIPTextbox = createTextBox(centralWidget, 10, 230, 250, 30);
+    
+    displayText(&mainWindow, "Dst MAC (12 Hex digits)", 10, 270, 300, 30);
+    QLineEdit* dstMACTextbox = createTextBox(centralWidget, 10, 300, 250, 30);
+    
+    // Button to submit
+    QPushButton *submitButton = new QPushButton("Auto MAC?", centralWidget);
+    submitButton->move(10, 340);
+    submitButton->resize(80, 30);
 
-    std::cout << "Gateway IP: " << gwIP << "\n";
-    Packet pkt(sizeof(ETHERNET_HEADER) + sizeof(ARP_HEADER));
-
-    ETHERNET_HEADER* eth = (ETHERNET_HEADER*)(pkt.packet);
-    memset(eth->dstMac, 0xFF, 6);//Broadcast MAC for ARP request
-    memcpy(eth->srcMac, srcMac, 6);
-    eth->ethernetType = convertToBigEndian16(0x0806);//Ethertype =ARP
-    pkt.reserve(sizeof(ETHERNET_HEADER));
-
-    ARP arp;
-    arp.include(pkt);
-    arp.header->hardwareType = convertToBigEndian16(1);//Ethernet
-    arp.header->protocolType = convertToBigEndian16(0x0800);//IPv4
-    arp.header->hardwareAdrssLen = 6;//MAC LEN
-    arp.header->protocolAdressLen = 4;//IPV4
-    arp.header->operation = convertToBigEndian16(1);//Request
-    memcpy(arp.header->sendAdrr, srcMac, 6);
-    const char* senderIP = "10.50.70.64";
-    bytes_4 sendersIPbytes = convertToBigEndian32(v4addr(senderIP));
-    memcpy(arp.header->sendProtolAdrr, &sendersIPbytes, 4);
-    memset(arp.header->reciveAdrr, 0, 6);//zero unkown adress mac
-
-    uint32_t gwIpBytes = inet_addr(gwIP.c_str());
-    memcpy(arp.header->reciveProtolAdrr, &gwIpBytes, 4);
-
-    pkt.send(handler);
+    createVerticalLine(centralWidget, 270, 0, 500);  // x=100, y=20, height=200
 
 
-    std::cout << "SENT " << gwIP << "\n";
+    mainWindow.setCentralWidget(centralWidget);
+    mainWindow.show();
 
-    handler.close();
-    return 0;
+    return app.exec();
 }
