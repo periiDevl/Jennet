@@ -16,7 +16,13 @@ public:
     void applyChecksum() override;
     void configurePseudoHeader(IPV4_HEADER& ipv4Header);
     void construtPrmtv(byte flag);
-    void addSynOptions();
+    void addSynOptions(
+    uint16_t mss = 1460, 
+    byte windowScale = 0, 
+    uint32_t tsVal = 0, 
+    uint32_t tsEcho = 0,
+    bool addSACK = true
+);
     TCP_PSEUDO_HEADER psudoHeader;
     std::vector<byte> payload;
 };
@@ -29,37 +35,40 @@ TCP::~TCP()
 {
 }
 
-void TCP::addSynOptions() {
+void TCP::addSynOptions(
+    uint16_t mss, 
+    byte windowScale, 
+    uint32_t tsVal, 
+    uint32_t tsEcho,
+    bool addSACK
+) {
     payload.clear();
-    payload.reserve(20);
-
     payload.push_back(0x02);
     payload.push_back(0x04);
-    payload.push_back(0x05);
-    payload.push_back(0xB4);
+    payload.push_back(mss >> 8);
+    payload.push_back(mss & 0xFF);
 
-    payload.push_back(0x04);
-    payload.push_back(0x02);
-
+    if (windowScale > 0) {
+        payload.push_back(0x03);
+        payload.push_back(0x03);
+        payload.push_back(windowScale);
+    }
     payload.push_back(0x08);
-    payload.push_back(0x0A);
-    
-    uint32_t tsVal = convertToBigEndian32(static_cast<uint32_t>(4232487165));
-    uint32_t tsEcho = 0;
-    
-    payload.insert(payload.end(), reinterpret_cast<byte*>(&tsVal), reinterpret_cast<byte*>(&tsVal) + 4);
-    payload.insert(payload.end(), reinterpret_cast<byte*>(&tsEcho), reinterpret_cast<byte*>(&tsEcho) + 4);
-    
+    payload.push_back(0x0A); 
+    uint32_t tsValBE = convertToBigEndian32(tsVal);
+    uint32_t tsEchoBE = convertToBigEndian32(tsEcho);
+    payload.insert(payload.end(), reinterpret_cast<byte*>(&tsValBE), reinterpret_cast<byte*>(&tsValBE) + 4);
+    payload.insert(payload.end(), reinterpret_cast<byte*>(&tsEchoBE), reinterpret_cast<byte*>(&tsEchoBE) + 4);
     payload.push_back(0x01);
-
-    payload.push_back(0x03);
-    payload.push_back(0x03);
-    payload.push_back(0x07);
-
-    while (payload.size() < 20) {
+    if (addSACK) {
+        payload.push_back(0x04);
+        payload.push_back(0x02);
+    }
+    while (payload.size() % 4 != 0) {
         payload.push_back(0x00);
     }
 }
+
 void TCP::construtPrmtv(byte flag){
     header->seqNum = convertToBigEndian32(0x1);
     header->ackNum = 0;

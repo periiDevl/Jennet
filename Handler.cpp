@@ -3,7 +3,7 @@ const char* Handler::getInterface(){return interface;}
 Handler::Handler(const char* interf)
 {
     interface = interf;
-    const char* iface = "wlo1";
+    const char* iface = interf;
     char errbuf[PCAP_ERRBUF_SIZE]{};
 
     handle = pcap_open_live(iface, BUFSIZ, 1, 1000, errbuf);

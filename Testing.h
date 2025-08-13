@@ -9,7 +9,7 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-
+#include"UI/UI.h"
 using byte = unsigned char;
 //NOT MY CODE TO IM REMOVING IT NEXT UPDATE
 class MacGetter {
@@ -17,6 +17,25 @@ class MacGetter {
 
 public:
     explicit MacGetter(const char* interfaceName) : iface(interfaceName) {}
+
+    static bool macFromLineEdit(QLineEdit* edit, byte mac[6]) {
+        if (!edit) return false;
+
+        QString text = edit->text().trimmed();
+        std::string macStr = text.toStdString();
+
+        if (macStr.length() != 17) return false; // AA:BB:CC:DD:EE:FF format
+
+        unsigned int vals[6];
+        if (sscanf(macStr.c_str(), "%02x:%02x:%02x:%02x:%02x:%02x",
+                   &vals[0], &vals[1], &vals[2], &vals[3], &vals[4], &vals[5]) != 6)
+            return false;
+
+        for (int i = 0; i < 6; ++i)
+            mac[i] = static_cast<byte>(vals[i]);
+
+        return true;
+    }
 
     bool getInterfaceMac(byte srcMac[6]) const {
         int fd = socket(AF_INET, SOCK_DGRAM, 0);
