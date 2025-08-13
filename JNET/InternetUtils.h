@@ -5,7 +5,7 @@
 #include "Defng.h" // Assuming this defines bytes_2 and bytes_4
 
 // 1. Endianness Detection (More robust)
-bool isMachineBigEndian() {
+inline bool isMachineBigEndian() {
     const uint32_t num = 0x00000001;
     return (*((const uint8_t*)&num) == 0x00);
 }
@@ -43,7 +43,7 @@ inline bytes_4 convertToBigEndian32(bytes_4 value) {
 // 4. Robust IP Address Parser
 //    This is a more reliable way to parse an IP string into a 32-bit
 //    integer in network byte order, independent of host endianness.
-bytes_4 v4addr(const std::string& ip) {
+inline bytes_4 v4addr(const std::string& ip) {
     bytes_4 addressInBytes = 0;
     std::string sectionString;
     size_t start = 0;
