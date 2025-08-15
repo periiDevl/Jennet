@@ -8,9 +8,9 @@ private:
 
 public:
     
-    inline IPV4();
-    inline ~IPV4();
-    inline void applyChecksum() override;
+    IPV4();
+    ~IPV4();
+    void applyChecksum() override;
 };
 
 IPV4::IPV4()
