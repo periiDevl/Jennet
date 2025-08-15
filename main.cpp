@@ -12,7 +12,6 @@
 #include "TCP/TCP_FLAGS.h"
 #include "Testing.h"
 #include "InternetUtils.h"
-#include <cjson/cJSON.h>
 #include"UI/UI.h"
 char* read_file(const char* filename) {
     FILE *f = fopen(filename, "rb");
@@ -79,16 +78,6 @@ int main(int argc, char *argv[]) {
     });
 
     createVerticalLine(centralWidget, 270, 0, 500);  // x=100, y=20, height=200
-
-    const char *filename = "JSONS/IPV4.json";
-    char *json_text = read_file(filename);
-    if (!json_text) {
-        return 1;
-    }
-    cJSON *root = cJSON_Parse(json_text);
-    free(json_text);
-
-
 
     /*
     if (!mg.getInterfaceMac(srcMac)) {
