@@ -52,10 +52,11 @@ protected:
 public:
     HeaderType* header = nullptr;
 
-    void include(Packet& packet)
+    void include(Packet& packet, size_t size)
     {
         header = reinterpret_cast<HeaderType*>(packet.packet + packet.getReserve());
         //packet.reserve(sizeof(HeaderType));
+        
     }
     Protocol(){};
     ~Protocol(){};

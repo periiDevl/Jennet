@@ -11,12 +11,12 @@ private:
 
 public:
     
-    TCP();
-    ~TCP();
-    void applyChecksum() override;
-    void configurePseudoHeader(IPV4_HEADER& ipv4Header);
-    void construtPrmtv(byte flag);
-    void addSynOptions(
+    inline TCP();
+    inline ~TCP();
+    inline void applyChecksum() override;
+    inline void configurePseudoHeader(IPV4_HEADER& ipv4Header);
+    inline void construtPrmtv(byte flag);
+    inline void addSynOptions(
     uint16_t mss = 1460, 
     byte windowScale = 0, 
     uint32_t tsVal = 0, 
