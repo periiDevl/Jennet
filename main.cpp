@@ -1,4 +1,3 @@
-
 #include <pcap.h>
 #include <iostream>
 #include <cstring>
@@ -12,165 +11,58 @@
 #include "TCP/TCP_FLAGS.h"
 #include "Testing.h"
 #include "InternetUtils.h"
-#include"UI/UI.h"
-char* read_file(const char* filename) {
-    FILE *f = fopen(filename, "rb");
-    if (!f) {
-        perror("Failed to open file");
-        return NULL;
-    }
+#include"ARP/ARP.h"
+#include"Handler.h"
 
-    fseek(f, 0, SEEK_END);
-    long length = ftell(f);
-    fseek(f, 0, SEEK_SET);
+int main() {
+    Handler handler("enp11s0");
 
-    if (length < 0) {
-        fclose(f);
-        perror("ftell failed");
-        return NULL;
-    }
-    char *buffer = (char*)malloc(length + 1);
-    if (!buffer) {
-        fclose(f);
-        fprintf(stderr, "Memory allocation failed\n");
-        return NULL;
-    }
-    size_t read_len = fread(buffer, 1, length, f);
-    fclose(f);
-    if (read_len != length) {
-        free(buffer);
-        fprintf(stderr, "Failed to read whole file\n");
-        return NULL;
-    }
-    buffer[length] = '\0'; 
-    return buffer;
-}
-int main(int argc, char *argv[]) {
-    QApplication app(argc, argv);
+    MacGetter mg(handler.getInterface());
 
-    QMainWindow mainWindow;
-    mainWindow.setWindowTitle("Jennet - Jonathan Perii");
-    mainWindow.setFixedSize(800, 500);
-
-    QWidget *centralWidget = new QWidget(&mainWindow);
-
-    displayText(&mainWindow, "Interface :", 10, 10, 300, 30);
-    QLineEdit* InterfaceTextbox = createTextBox(centralWidget, 10, 40, 250, 30);
-    
-    displayText(&mainWindow, "Source IP", 10, 70 + 10, 300, 30);
-    QLineEdit* srcIPTextbox = createTextBox(centralWidget, 10, 110, 250, 30);
-    displayText(&mainWindow, "Source MAC (12 Hex digits)", 10, 140, 300, 30);
-    QLineEdit* srcMACTextbox = createTextBox(centralWidget, 10, 170, 250, 30);
-    
-    displayText(&mainWindow, "Dst IP", 10, 200, 300, 30);
-    QLineEdit* dstIPTextbox = createTextBox(centralWidget, 10, 230, 250, 30);
-    
-    displayText(&mainWindow, "Dst MAC (12 Hex digits)", 10, 270, 300, 30);
-    QLineEdit* dstMACTextbox = createTextBox(centralWidget, 10, 300, 250, 30);
-    
-    // Button to submit
-    QPushButton *submitButton = new QPushButton("Auto MAC?", centralWidget);
-    submitButton->move(10, 340);
-    submitButton->resize(80, 30);
-    bool autoMAC = false;
-    QObject::connect(submitButton, &QPushButton::clicked, [&]() {
-        autoMAC = true;  // this runs when button is clicked
-    });
-
-    createVerticalLine(centralWidget, 270, 0, 500);  // x=100, y=20, height=200
-
-    /*
+    byte srcMac[6]{};
     if (!mg.getInterfaceMac(srcMac)) {
-        std::cerr << "Failed to get source MAC address\n";
+        std::cerr << "Failed to get interface MAC\n";
         handler.close();
         return 1;
     }
 
-    if (!mg.getGatewayMac(dstMac)) {
-        std::cerr << "Failed to get gateway MAC address\n";
+    std::string gwIP = mg.getDefaultGatewayIP();
+    if (gwIP.empty()) {
+        std::cerr << "Failed to get default gateway IP\n";
         handler.close();
         return 1;
     }
-    */
+
+    std::cout << "Gateway IP: " << gwIP << "\n";
+    Packet pkt(sizeof(ETHERNET_HEADER) + sizeof(ARP_HEADER));
+
+    ETHERNET_HEADER* eth = (ETHERNET_HEADER*)(pkt.packet);
+    memset(eth->dstMac, 0xFF, 6);//Broadcast MAC for ARP request
+    memcpy(eth->srcMac, srcMac, 6);
+    eth->ethernetType = convertToBigEndian16(0x0806);//Ethertype =ARP
+    pkt.reserve(sizeof(ETHERNET_HEADER));
+
+    ARP arp;
+    arp.include(pkt);
+    arp.header->hardwareType = convertToBigEndian16(1);//Ethernet
+    arp.header->protocolType = convertToBigEndian16(0x0800);//IPv4
+    arp.header->hardwareAdrssLen = 6;//MAC LEN
+    arp.header->protocolAdressLen = 4;//IPV4
+    arp.header->operation = convertToBigEndian16(1);//Request
+    memcpy(arp.header->sendAdrr, srcMac, 6);
+    const char* senderIP = "10.0.0.103";
+    bytes_4 sendersIPbytes = convertToBigEndian32(v4addr(senderIP));
+    memcpy(arp.header->sendProtolAdrr, &sendersIPbytes, 4);
+    memset(arp.header->reciveAdrr, 0, 6);//zero unkown adress mac
+
+    uint32_t gwIpBytes = inet_addr(gwIP.c_str());
+    memcpy(arp.header->reciveProtolAdrr, &gwIpBytes, 4);
+
+    pkt.send(handler);
 
 
-    QPushButton* sendButton = new QPushButton("Send Packet", centralWidget);
-    sendButton->move(120, 340);
-    sendButton->resize(100, 30);
+    std::cout << "SENT " << gwIP << "\n";
 
-    QObject::connect(sendButton, &QPushButton::clicked, [&]() {
-        Handler handler("enp11s0");
-        MacGetter mg(handler.getInterface());
-        byte srcMac[6]{};
-        byte dstMac[6]{};
-        MacGetter::macFromLineEdit(srcMACTextbox, srcMac);
-        MacGetter::macFromLineEdit(dstMACTextbox, dstMac);
-        TCP tcp;
-        tcp.addSynOptions();
-        const size_t tcpOptionsLen = tcp.payload.size();
-        const size_t tcpHeaderLen = sizeof(TCP_HEADER) + tcpOptionsLen;
-
-        const size_t totalPacketSize = sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + tcpHeaderLen;
-        Packet pkt(totalPacketSize);
-
-        ETHERNET_HEADER* eth = reinterpret_cast<ETHERNET_HEADER*>(pkt.packet);
-        memcpy(eth->srcMac, srcMac, 6);
-        memcpy(eth->dstMac, dstMac, 6);
-        eth->ethernetType = convertToBigEndian16(0x0800);
-        pkt.reserve(sizeof(ETHERNET_HEADER));
-
-        IPV4 ipv4;
-        ipv4.include(pkt);
-        ipv4.header->version_IHL = (4 << 4) | (sizeof(IPV4_HEADER) / 4);
-        ipv4.header->TOS = 0;
-        ipv4.header->totalLen = convertToBigEndian16(sizeof(IPV4_HEADER) + tcpHeaderLen);
-        ipv4.header->id = convertToBigEndian16(0x1234);
-        ipv4.header->flags_fragmentOffset = convertToBigEndian16(0x4000);
-        ipv4.header->TTL = 64;
-        ipv4.header->protocol = 6;
-        QString srcIPQString = srcIPTextbox->text().trimmed();
-        QString dstIPQString = dstIPTextbox->text().trimmed();
-
-        std::string srcIPStr = srcIPQString.toStdString();
-        std::string dstIPStr = dstIPQString.toStdString();
-
-        ipv4.header->sendersIP = convertToBigEndian32(v4addr(srcIPStr));
-        ipv4.header->reciveIP = convertToBigEndian32(v4addr(dstIPStr));
-        ipv4.applyChecksum();
-        pkt.reserve(sizeof(IPV4_HEADER));
-
-        tcp.include(pkt);
-        pkt.reserve(tcpHeaderLen);
-
-        tcp.construtPrmtv(SYN());
-
-        tcp.header->srcPort = convertToBigEndian16(52848);
-        tcp.header->destPort = convertToBigEndian16(80);
-        tcp.header->seqNum = convertToBigEndian32(static_cast<bytes_4>(1798999813));
-        tcp.header->windowSize = convertToBigEndian16(64240);
-
-        tcp.header->dataOffReservedAndNS = ((sizeof(TCP_HEADER) + tcpOptionsLen) / 4) << 4;
-
-        memcpy(reinterpret_cast<byte*>(tcp.header + 1), tcp.payload.data(), tcp.payload.size());
-
-        tcp.configurePseudoHeader(*ipv4.header);
-        tcp.applyChecksum();
-
-
-        if (pkt.send(handler) != 0) {
-            std::cerr << "Failed to send packet\n";
-            handler.close();
-        } else {
-            std::cout << "Packet sent successfully!\n";
-        }
-        std::cout << "SYN with correct TCP options sent to 1.1.1.1:80\n";
-
-        handler.close();
-    });
-
-    
-    mainWindow.setCentralWidget(centralWidget);
-    mainWindow.show();
-
-    return app.exec();
+    handler.close();
+    return 0;
 }
