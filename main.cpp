@@ -34,16 +34,16 @@ int main() {
     }
 
     std::cout << "Gateway IP: " << gwIP << "\n";
-    Packet pkt(sizeof(ETHERNET_HEADER) + sizeof(ARP_HEADER));
-
-    ETHERNET_HEADER* eth = (ETHERNET_HEADER*)(pkt.packet);
+    
+    ETHERNET_HEADER* eth = new ETHERNET_HEADER;
     memset(eth->dstMac, 0xFF, 6);//Broadcast MAC for ARP request
     memcpy(eth->srcMac, srcMac, 6);
     eth->ethernetType = convertToBigEndian16(0x0806);//Ethertype =ARP
-    pkt.reserve(sizeof(ETHERNET_HEADER));
-
+    //pkt.reserve(sizeof(ETHERNET_HEADER));
+    
     ARP arp;
-    arp.include(pkt);
+    arp.header = new ARP_HEADER;
+    //arp.include(pkt);
     arp.header->hardwareType = convertToBigEndian16(1);//Ethernet
     arp.header->protocolType = convertToBigEndian16(0x0800);//IPv4
     arp.header->hardwareAdrssLen = 6;//MAC LEN
@@ -54,9 +54,13 @@ int main() {
     bytes_4 sendersIPbytes = convertToBigEndian32(v4addr(senderIP));
     memcpy(arp.header->sendProtolAdrr, &sendersIPbytes, 4);
     memset(arp.header->reciveAdrr, 0, 6);//zero unkown adress mac
-
+    
     uint32_t gwIpBytes = inet_addr(gwIP.c_str());
     memcpy(arp.header->reciveProtolAdrr, &gwIpBytes, 4);
+    
+    Packet pkt(sizeof(ETHERNET_HEADER) + sizeof(ARP_HEADER));
+    memcpy(pkt.packet, eth, sizeof(ETHERNET_HEADER));
+    memcpy(pkt.packet + sizeof(ETHERNET_HEADER), arp.header, sizeof(ARP_HEADER));
 
     pkt.send(handler);
 
