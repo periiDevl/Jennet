@@ -10,7 +10,7 @@
         "protocol": 6
     },
     "TCP": {
-        "srcPort": 12345,
+        "srcPort": 1212,
         "dstPort": 80,
         "seqNum": 0,
         "ackNum": 0,

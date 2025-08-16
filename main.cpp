@@ -11,6 +11,16 @@
 #include "UI/UI.h"
 #include "JSON_JENNET.h"
 #include "Testing.h"
+#include <QApplication>
+#include <QMainWindow>
+#include <QDockWidget>
+#include <QTextEdit>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QFile>
+#include <QTextStream>
+#include <QMessageBox>
+
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -44,6 +54,32 @@ int main(int argc, char *argv[]) {
     QPushButton* sendButton = new QPushButton("Send Packet", centralWidget);
     sendButton->move(120, 340);
     sendButton->resize(100, 30);
+
+    QTextEdit* jsonEditor = new QTextEdit(centralWidget);
+    jsonEditor->setGeometry(280, 10, 500, 480);
+    jsonEditor->setText("{\n\t\"example\": \"edit me\"\n}");
+
+    QFile file("JSONS/SETTINGS.json");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        jsonEditor->setText(in.readAll());
+        file.close();
+    }
+
+    QPushButton* saveJsonButton = new QPushButton("Save JSON", centralWidget);
+    saveJsonButton->setGeometry(280, 500 - 40, 100, 30);
+
+    QObject::connect(saveJsonButton, &QPushButton::clicked, [jsonEditor]() {
+        QFile file("JSONS/SETTINGS.json");
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&file);
+            out << jsonEditor->toPlainText();
+            file.close();
+            QMessageBox::information(nullptr, "Saved!", "Settings saved!");
+        } else {
+            QMessageBox::warning(nullptr, "Error", "Failed to save JSON file.");
+        }
+    });
 
     QObject::connect(sendButton, &QPushButton::clicked, [&]() {
         Handler handler("enp11s0");
