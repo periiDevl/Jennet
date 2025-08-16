@@ -53,7 +53,7 @@ void JSON_JENNET::loadFeatures(const char* filename) {
         free(json_text);
         return;
     }
-    bytes_2 totalSize = 0;
+    
     cJSON *ipv4Json = cJSON_GetObjectItem(root, "IPV4");
     if (ipv4Json)
     {
@@ -71,11 +71,35 @@ void JSON_JENNET::loadFeatures(const char* filename) {
     cJSON *tcpJson = cJSON_GetObjectItem(root, "TCP");
     if (tcpJson)
     {
+        tcp.header = new TCP_HEADER;
         enableTCP = true;
-        tcp.addSynOptions();
+        if (cJSON_HasObjectItem(tcpJson, "options") && cJSON_IsTrue(cJSON_GetObjectItem(tcpJson, "options")))
+            tcp.addSynOptions();
+        
         totalSize += sizeof(TCP_HEADER) + tcp.payload.size();
         
+        tcp.construtPrmtv(2);
+        tcp.header->srcPort = convertToBigEndian16(cJSON_GetObjectItem(tcpJson, "srcPort")->valueint);
+        tcp.header->destPort = convertToBigEndian16(cJSON_GetObjectItem(tcpJson, "dstPort")->valueint);
+        tcp.header->seqNum = convertToBigEndian32(cJSON_GetObjectItem(tcpJson, "seqNum")->valueint);
+        tcp.header->ackNum = convertToBigEndian32(cJSON_GetObjectItem(tcpJson, "ackNum")->valueint);
+        tcp.header->windowSize = convertToBigEndian16(cJSON_GetObjectItem(tcpJson, "windowSize")->valueint);
+        tcp.header->flag = cJSON_GetObjectItem(tcpJson, "flags")->valueint;
+        tcp.header->urgPointer = convertToBigEndian16(cJSON_GetObjectItem(tcpJson, "urgPointer")->valueint);
+        
+        tcp.header->dataOffReservedAndNS = 
+            (((sizeof(TCP_HEADER) + tcp.payload.size()) / 4) << 4) |
+            ((cJSON_GetObjectItem(tcpJson, "reserved")->valueint & 0x07) << 1) |
+            (cJSON_GetObjectItem(tcpJson, "NS")->valueint & 0x01);
+        
+        if (enableIPV4) {
+            ipv4.header->totalLen = convertToBigEndian16(sizeof(IPV4_HEADER) + sizeof(TCP_HEADER) + tcp.payload.size());
+            ipv4.applyChecksum();
+        }
+        tcp.configurePseudoHeader(*ipv4.header);
+        tcp.applyChecksum();
     }
+
 
     cJSON_Delete(root);
     free(json_text);

@@ -18,6 +18,7 @@ public:
     TCP tcp;
     bool enableICMP = false;
     bool enableARP = false;
+    bytes_2 totalSize = 0;
     JSON_JENNET();
     ~JSON_JENNET();
 };

@@ -10,7 +10,7 @@
 #include "TCP/TCP_FLAGS.h"
 #include "UI/UI.h"
 #include "JSON_JENNET.h"
-#include"Testing.h"
+#include "Testing.h"
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -56,50 +56,38 @@ int main(int argc, char *argv[]) {
         JSON_JENNET json;
         json.loadFeatures("JSONS/SETTINGS.json");
 
-        ETHERNET_HEADER* eth = new ETHERNET_HEADER;
-        memcpy(eth->srcMac, srcMac, 6);
-        memcpy(eth->dstMac, dstMac, 6);
-        eth->ethernetType = convertToBigEndian16(0x0800);
-        
+        ETHERNET_HEADER eth{};
+        std::memcpy(eth.srcMac, srcMac, 6);
+        std::memcpy(eth.dstMac, dstMac, 6);
+        eth.ethernetType = convertToBigEndian16(0x0800); // IPv4
+
         if (json.enableIPV4) {
-            QString srcIPQString = srcIPTextbox->text().trimmed();
-            QString dstIPQString = dstIPTextbox->text().trimmed();
-            std::string srcIPStr = srcIPQString.toStdString();
-            std::string dstIPStr = dstIPQString.toStdString();
-            
+            const std::string srcIPStr = srcIPTextbox->text().trimmed().toStdString();
+            const std::string dstIPStr = dstIPTextbox->text().trimmed().toStdString();
             json.ipv4.header->sendersIP = convertToBigEndian32(v4addr(srcIPStr));
-            json.ipv4.header->reciveIP = convertToBigEndian32(v4addr(dstIPStr));
-        }
-        
-        TCP tcp;
-        tcp.header = new TCP_HEADER;
-        tcp.addSynOptions();
-        const size_t tcpOptionsLen = tcp.payload.size();
-        const size_t tcpHeaderLen = sizeof(TCP_HEADER) + tcpOptionsLen;
-        tcp.construtPrmtv(SYN());
-        tcp.header->srcPort = convertToBigEndian16(52848);
-        tcp.header->destPort = convertToBigEndian16(80);
-        tcp.header->seqNum = convertToBigEndian32(static_cast<bytes_4>(1798999813));
-        tcp.header->windowSize = convertToBigEndian16(64240);
-        tcp.header->dataOffReservedAndNS = ((sizeof(TCP_HEADER) + tcpOptionsLen) / 4) << 4;
-        
-        if (json.enableIPV4) {
-            json.ipv4.header->totalLen = convertToBigEndian16(sizeof(IPV4_HEADER) + tcpHeaderLen);
-            json.ipv4.applyChecksum();
-        }
-        tcp.configurePseudoHeader(*json.ipv4.header);
-        tcp.applyChecksum();
-        const size_t totalPacketSize = sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + tcpHeaderLen;
-        Packet pkt(totalPacketSize);
-        memcpy(pkt.packet, eth, sizeof(ETHERNET_HEADER));
-        memcpy(pkt.packet + sizeof(ETHERNET_HEADER), json.ipv4.header, sizeof(IPV4_HEADER));
-        memcpy(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER), tcp.header, sizeof(TCP_HEADER));
-        tcp.header = reinterpret_cast<TCP_HEADER*>(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
-        if (!tcp.payload.empty()) {
-            memcpy(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + sizeof(TCP_HEADER), 
-                   tcp.payload.data(), tcp.payload.size());
+            json.ipv4.header->reciveIP  = convertToBigEndian32(v4addr(dstIPStr));
         }
 
+        const size_t tcpOptionsLen  = json.tcp.payload.size();
+        const size_t tcpHeaderSize  = sizeof(TCP_HEADER) + tcpOptionsLen;
+        const size_t totalPacketLen = sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + tcpHeaderSize;
+        json.ipv4.header->Hchecksum = 0;
+        json.ipv4.applyChecksum();
+        json.tcp.configurePseudoHeader(*json.ipv4.header);
+        json.tcp.applyChecksum();
+
+        Packet pkt(totalPacketLen);
+        std::memcpy(pkt.packet, &eth, sizeof(ETHERNET_HEADER));
+        std::memcpy(pkt.packet + sizeof(ETHERNET_HEADER), json.ipv4.header, sizeof(IPV4_HEADER));
+        std::memcpy(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER), json.tcp.header, sizeof(TCP_HEADER));
+
+        if (tcpOptionsLen) {
+            std::memcpy(
+                pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + sizeof(TCP_HEADER),
+                json.tcp.payload.data(),
+                tcpOptionsLen
+            );
+        }
 
 
         if (pkt.send(handler) != 0) {
@@ -108,10 +96,11 @@ int main(int argc, char *argv[]) {
             std::cout << "Packet sent successfully!\n";
         }
         std::cout << "SYN with correct TCP options sent\n";
-        
+
         handler.close();
     });
-    
+
+
     mainWindow.setCentralWidget(centralWidget);
     mainWindow.show();
     return app.exec();
