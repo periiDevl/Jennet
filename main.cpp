@@ -20,7 +20,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
-
+#include <QComboBox>
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
@@ -31,8 +31,23 @@ int main(int argc, char *argv[]) {
 
     QWidget *centralWidget = new QWidget(&mainWindow);
 
-    displayText(&mainWindow, "Interface :", 10, 10, 300, 30);
     QLineEdit* InterfaceTextbox = createTextBox(centralWidget, 10, 40, 250, 30);
+    QComboBox* interfaceDropdown = new QComboBox(centralWidget);
+    interfaceDropdown->setGeometry(10, 40, 250, 30);
+
+    pcap_if_t *alldevs, *d;
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    if (pcap_findalldevs(&alldevs, errbuf) == -1) {
+        QMessageBox::critical(nullptr, "Error", QString("Error finding devices: %1").arg(errbuf));
+    } else {
+        for (d = alldevs; d != nullptr; d = d->next) {
+            if (d->name) {
+                interfaceDropdown->addItem(d->name);
+            }
+        }
+        pcap_freealldevs(alldevs);
+    }
 
     displayText(&mainWindow, "Source IP", 10, 80, 300, 30);
     QLineEdit* srcIPTextbox = createTextBox(centralWidget, 10, 110, 250, 30);
@@ -82,7 +97,9 @@ int main(int argc, char *argv[]) {
     });
 
     QObject::connect(sendButton, &QPushButton::clicked, [&]() {
-        Handler handler("enp11s0");
+        QString selectedInterface = interfaceDropdown->currentText();
+        Handler handler(selectedInterface.toStdString().c_str());
+
         MacGetter mg(handler.getInterface());
 
         byte srcMac[6]{}, dstMac[6]{};
