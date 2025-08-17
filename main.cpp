@@ -102,29 +102,15 @@ int main(int argc, char *argv[]) {
             const std::string dstIPStr = dstIPTextbox->text().trimmed().toStdString();
             json.ipv4.header->sendersIP = convertToBigEndian32(v4addr(srcIPStr));
             json.ipv4.header->reciveIP  = convertToBigEndian32(v4addr(dstIPStr));
+            json.ipv4.header->Hchecksum = 0;
+            json.ipv4.applyChecksum();
         }
-
-        const size_t tcpOptionsLen  = json.tcp.payload.size();
-        const size_t tcpHeaderSize  = sizeof(TCP_HEADER) + tcpOptionsLen;
-        const size_t totalPacketLen = sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + tcpHeaderSize;
-        json.ipv4.header->Hchecksum = 0;
-        json.ipv4.applyChecksum();
-        json.tcp.configurePseudoHeader(*json.ipv4.header);
-        json.tcp.applyChecksum();
-
-        Packet pkt(totalPacketLen);
-        std::memcpy(pkt.packet, &eth, sizeof(ETHERNET_HEADER));
-        std::memcpy(pkt.packet + sizeof(ETHERNET_HEADER), json.ipv4.header, sizeof(IPV4_HEADER));
-        std::memcpy(pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER), json.tcp.header, sizeof(TCP_HEADER));
-
-        if (tcpOptionsLen) {
-            std::memcpy(
-                pkt.packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + sizeof(TCP_HEADER),
-                json.tcp.payload.data(),
-                tcpOptionsLen
-            );
+        if (json.enableTCP){
+            json.tcp.configurePseudoHeader(*json.ipv4.header);
+            json.tcp.applyChecksum();
         }
-
+        Packet pkt(json.totalSize + sizeof(ETHERNET_HEADER));
+        json.consturct(&pkt, eth);
 
         if (pkt.send(handler) != 0) {
             std::cerr << "Failed to send packet\n";

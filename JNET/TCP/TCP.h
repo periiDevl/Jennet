@@ -17,12 +17,14 @@ public:
     inline void configurePseudoHeader(IPV4_HEADER& ipv4Header);
     inline void construtPrmtv(byte flag);
     inline void addSynOptions(
-    uint16_t mss = 1460, 
+    bytes_2 mss = 1460, 
     byte windowScale = 0, 
-    uint32_t tsVal = 0, 
-    uint32_t tsEcho = 0,
+    bytes_4 tsVal = 0, 
+    bytes_4 tsEcho = 0,
     bool addSACK = true
-);
+    );
+    inline void addText(const std::string& text);
+
     TCP_PSEUDO_HEADER psudoHeader;
     std::vector<byte> payload;
 };
@@ -34,12 +36,15 @@ TCP::TCP()
 TCP::~TCP()
 {
 }
-
+void TCP::addText(const std::string& text) {
+    payload.clear();
+    payload.insert(payload.end(), text.begin(), text.end());
+}
 void TCP::addSynOptions(
-    uint16_t mss, 
+    bytes_2 mss, 
     byte windowScale, 
-    uint32_t tsVal, 
-    uint32_t tsEcho,
+    bytes_4 tsVal, 
+    bytes_4 tsEcho,
     bool addSACK
 ) {
     payload.clear();
@@ -55,8 +60,8 @@ void TCP::addSynOptions(
     }
     payload.push_back(0x08);
     payload.push_back(0x0A); 
-    uint32_t tsValBE = convertToBigEndian32(tsVal);
-    uint32_t tsEchoBE = convertToBigEndian32(tsEcho);
+    bytes_4 tsValBE = convertToBigEndian32(tsVal);
+    bytes_4 tsEchoBE = convertToBigEndian32(tsEcho);
     payload.insert(payload.end(), reinterpret_cast<byte*>(&tsValBE), reinterpret_cast<byte*>(&tsValBE) + 4);
     payload.insert(payload.end(), reinterpret_cast<byte*>(&tsEchoBE), reinterpret_cast<byte*>(&tsEchoBE) + 4);
     payload.push_back(0x01);

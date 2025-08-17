@@ -73,9 +73,22 @@ void JSON_JENNET::loadFeatures(const char* filename) {
     {
         tcp.header = new TCP_HEADER;
         enableTCP = true;
-        if (cJSON_HasObjectItem(tcpJson, "options") && cJSON_IsTrue(cJSON_GetObjectItem(tcpJson, "options")))
-            tcp.addSynOptions();
-        
+        cJSON *tcpOptionsJson = cJSON_GetObjectItem(root, "TCP_OP");
+        if (tcpOptionsJson)
+        {
+            tcp.addSynOptions(
+                cJSON_GetObjectItem(tcpOptionsJson, "MSS")->valueint,
+                cJSON_GetObjectItem(tcpOptionsJson, "WindowScale")->valueint,
+                cJSON_GetObjectItem(tcpOptionsJson, "TSVal")->valueint,
+                cJSON_GetObjectItem(tcpOptionsJson, "TSEcho")->valueint,
+                cJSON_IsTrue(cJSON_GetObjectItem(tcpOptionsJson, "SACK"))
+            );
+        }
+        cJSON *textTCP = cJSON_GetObjectItem(root, "TEXT");
+        if (textTCP)
+        {
+            tcp.addText(cJSON_GetObjectItem(textTCP, "DATA")->valuestring);
+        }
         totalSize += sizeof(TCP_HEADER) + tcp.payload.size();
         
         tcp.construtPrmtv(2);
@@ -99,8 +112,21 @@ void JSON_JENNET::loadFeatures(const char* filename) {
         tcp.configurePseudoHeader(*ipv4.header);
         tcp.applyChecksum();
     }
+    cJSON *icmpJson = cJSON_GetObjectItem(root, "ICMP");
+    if (icmpJson)
+    {
+        icmp.header = new ICMP_HEADER;
+        totalSize += sizeof(ICMP_HEADER);
+        enableICMP = true;
 
-
+        icmp.header->type = cJSON_GetObjectItem(icmpJson, "type")->valueint;
+        icmp.header->code = cJSON_GetObjectItem(icmpJson, "code")->valueint;
+        bytes_2 id  = (bytes_2)cJSON_GetObjectItem(icmpJson, "id")->valueint;
+        bytes_2 seq = (bytes_2)cJSON_GetObjectItem(icmpJson, "seq")->valueint;
+        icmp.header->extendedHeader = convertToBigEndian32(((bytes_4)id << 16) | seq);
+        ipv4.header->totalLen = convertToBigEndian16(sizeof(IPV4_HEADER) + sizeof(ICMP_HEADER));
+        icmp.applyChecksum();
+    }
     cJSON_Delete(root);
     free(json_text);
 }
