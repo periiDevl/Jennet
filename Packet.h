@@ -10,6 +10,8 @@ private:
     size_t currectReservedSize = 0;
 public:
     void reserve(size_t size){currectReservedSize += size;}
+    void copy(const void* data,size_t size);
+    void copyAdv(const void* data,size_t size);
     size_t getReserve(){return currectReservedSize;}
     byte* packet;
     size_t pktSize;

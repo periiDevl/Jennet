@@ -39,7 +39,27 @@ char* JSON_JENNET::read_file(const char* filename) {
     return buffer;
 }
 
-
+void JSON_JENNET::consturct(Packet* pkt, ETHERNET_HEADER header){
+    pkt->copyAdv(&header, sizeof(ETHERNET_HEADER));
+    if (enableIPV4) {
+        pkt->copyAdv(ipv4.header, sizeof(IPV4_HEADER));
+    }
+    
+    if (enableTCP) {
+        pkt->copyAdv(tcp.header, sizeof(TCP_HEADER));
+        if (tcp.payload.size()) {
+            pkt->copyAdv(tcp.payload.data(), tcp.payload.size());
+        }
+    }
+    
+    if (enableICMP) {
+        pkt->copyAdv(icmp.header, sizeof(ICMP_HEADER));
+    }
+    if (enableARP)
+    {
+        pkt->copyAdv(arp.header, sizeof(ARP_HEADER));
+    }
+}
 void JSON_JENNET::loadFeatures(const char* filename) {
     char *json_text = read_file(filename);
     if (!json_text) {
@@ -126,6 +146,17 @@ void JSON_JENNET::loadFeatures(const char* filename) {
         icmp.header->extendedHeader = convertToBigEndian32(((bytes_4)id << 16) | seq);
         ipv4.header->totalLen = convertToBigEndian16(sizeof(IPV4_HEADER) + sizeof(ICMP_HEADER));
         icmp.applyChecksum();
+    }
+    cJSON *arpJson = cJSON_GetObjectItem(root, "ARP");
+    if (arpJson)
+    {
+        arp.header = new ARP_HEADER;
+        totalSize += sizeof(ARP_HEADER);
+        enableARP = true;
+        memset(arp.header->reciveAdrr, 0, 6);
+        arp.header->hardwareType = convertToBigEndian16((bytes_2)cJSON_GetObjectItem(arpJson, "htype")->valueint);
+        arp.header->operation = convertToBigEndian16((bytes_2)cJSON_GetObjectItem(arpJson, "operation")->valueint);
+
     }
     cJSON_Delete(root);
     free(json_text);

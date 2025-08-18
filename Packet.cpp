@@ -13,3 +13,6 @@ Packet::~Packet()
 int Packet::send(Handler hnd){
     return pcap_sendpacket(hnd.get(), packet, pktSize);
 }
+
+void Packet::copy(const void* data,size_t size){std::memcpy(packet + getReserve(),data, size);}
+void Packet::copyAdv(const void* data,size_t size){std::memcpy(packet + getReserve(),data, size); reserve(size);}

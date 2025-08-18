@@ -5,9 +5,9 @@ class ARP : public Protocol<ARP_HEADER>
 {
 private:
 public:
-    ARP();
-    ~ARP();
-    void applyChecksum() override;
+    inline ARP();
+    inline ~ARP();
+    inline void applyChecksum() override;
 };
 
 ARP::ARP()
