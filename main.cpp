@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
 
     QMainWindow mainWindow;
     mainWindow.setWindowTitle("Jennet - Jonathan Perii");
+    //mainWindow.setFixedSize(1200, 500);
     mainWindow.setFixedSize(800, 500);
 
     QWidget *centralWidget = new QWidget(&mainWindow);
@@ -69,6 +70,8 @@ int main(int argc, char *argv[]) {
     QObject::connect(submitButton, &QPushButton::clicked, [&]() { autoMAC = true; });
 
     createVerticalLine(centralWidget, 270, 0, 500);
+    createVerticalLine(centralWidget, 787, 0, 500);
+
     QPushButton* sendButton = new QPushButton("Send Packet", centralWidget);
     sendButton->move(120, 340);
     sendButton->resize(100, 30);
@@ -217,6 +220,10 @@ int main(int argc, char *argv[]) {
                 memcpy(json.arp.header->reciveAdrr, dstMac, 6);
             }
             
+        }
+        if (json.enableUDP){
+            json.udp.configurePseudoHeader(*json.ipv4.header);
+            json.udp.applyChecksum();
         }
         Packet pkt(json.totalSize + sizeof(ETHERNET_HEADER));
         json.consturct(&pkt, eth);

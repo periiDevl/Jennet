@@ -8,6 +8,7 @@
 #include"IP/EthernetHeader.h"
 #include"ICMP/ICMP.h"
 #include"ARP/ARP.h"
+#include"UDP/UDP.h"
 class JSON_JENNET
 {
 private:
@@ -24,6 +25,8 @@ public:
     ICMP icmp;
     bool enableARP = false;
     ARP arp;
+    bool enableUDP = false;
+    UDP udp;
     bytes_2 totalSize = 0;
     JSON_JENNET();
     ~JSON_JENNET();

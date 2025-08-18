@@ -1,0 +1,21 @@
+{
+    "IPV4": {
+        "version": 4,
+        "IHL": 5,
+        "TOS": 0,
+        "id": 54321,
+        "flags": 0,
+        "fragmentOffset": 0,
+        "TTL": 64,
+        "protocol": 17
+    },
+    "UDP":
+    {
+        "srcPort":1212,
+        "dstPort":80
+    },
+    "TEXT":
+    {
+        "DATA":"Hello world"
+    }
+}

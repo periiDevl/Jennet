@@ -51,13 +51,18 @@ void JSON_JENNET::consturct(Packet* pkt, ETHERNET_HEADER header){
             pkt->copyAdv(tcp.payload.data(), tcp.payload.size());
         }
     }
-    
     if (enableICMP) {
         pkt->copyAdv(icmp.header, sizeof(ICMP_HEADER));
     }
     if (enableARP)
     {
         pkt->copyAdv(arp.header, sizeof(ARP_HEADER));
+    }
+    if (enableUDP) {
+        pkt->copyAdv(udp.header, sizeof(UDP_HEADER));
+        if (udp.payload.size()) {
+            pkt->copyAdv(udp.payload.data(), udp.payload.size());
+        }
     }
 }
 void JSON_JENNET::loadFeatures(const char* filename) {
@@ -157,6 +162,24 @@ void JSON_JENNET::loadFeatures(const char* filename) {
         arp.header->hardwareType = convertToBigEndian16((bytes_2)cJSON_GetObjectItem(arpJson, "htype")->valueint);
         arp.header->operation = convertToBigEndian16((bytes_2)cJSON_GetObjectItem(arpJson, "operation")->valueint);
 
+    }
+    cJSON *udpJson = cJSON_GetObjectItem(root, "UDP");
+    if (udpJson)
+    {
+        udp.header = new UDP_HEADER;
+        totalSize += sizeof(UDP_HEADER);
+        enableUDP = true;
+        udp.header->srcPort = convertToBigEndian16(cJSON_GetObjectItem(udpJson, "srcPort")->valueint);
+        udp.header->dstPort = convertToBigEndian16(cJSON_GetObjectItem(udpJson, "dstPort")->valueint);
+        cJSON *textUDP = cJSON_GetObjectItem(root, "TEXT");
+        if (textUDP)
+        {
+            udp.addText(cJSON_GetObjectItem(textUDP, "DATA")->valuestring);
+            totalSize += udp.payload.size();
+        }
+        ipv4.header->totalLen = convertToBigEndian16(sizeof(IPV4_HEADER) + sizeof(UDP_HEADER) + udp.payload.size());
+        udp.configurePseudoHeader(*ipv4.header);
+        udp.applyChecksum();
     }
     cJSON_Delete(root);
     free(json_text);
