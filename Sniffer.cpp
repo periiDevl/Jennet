@@ -7,6 +7,8 @@
 #include"IP/IPV4_HEADER.h"
 #include "ARP/ARP_HEADER.h"
 #include "ICMP/ICMP_HEADER.h"
+#include "UDP/UDP_HEADER.h"
+#include "TCP/TCP_HEADER.h"
 Sniffer::Sniffer(PacketInfo* pktInfoPtr) 
     : handle(nullptr), pktInfo(pktInfoPtr), running(false), shouldStop(false) {
 }
@@ -95,7 +97,7 @@ void Sniffer::packetHandler(u_char* args, const pcap_pkthdr* header, const u_cha
                             "To: " + bArrayToMACString(arp->reciveAdrr) + "\n" +
                             "Operator: " + std::to_string(netToHost16(arp->operation));
 
-        self->pktInfo->add("ARP(Address Resolution Protocol) From " +bArrayToIPv4String(arp->sendProtolAdrr)+" To " +bArrayToIPv4String(arp->reciveProtolAdrr),arpContent.c_str()
+        self->pktInfo->add("ARP From " +bArrayToIPv4String(arp->sendProtolAdrr)+" To " +bArrayToIPv4String(arp->reciveProtolAdrr),arpContent.c_str()
             ,255, 218, 173);
     }
     else if (netToHost16(eth->ethernetType) == 0x0800) { //IPV4
@@ -120,11 +122,56 @@ void Sniffer::packetHandler(u_char* args, const pcap_pkthdr* header, const u_cha
                 "Code: " + std::to_string(icmp->code) + "\n" +
                 "Seq: " + std::to_string(seq) + "\n" +
                 "ID: " + std::to_string(id) + "\n";
-            self->pktInfo->add("ICMP(Internet Control Message Protocol)" + ipv4BytesToString(netToHost32(ipv4->sendersIP)) + " Sent to " + ipv4BytesToString(netToHost32(ipv4->reciveIP)), (ipv4Content + icmpContent).c_str(), 4, 181, 54);
+            self->pktInfo->add("ICMP " + ipv4BytesToString(netToHost32(ipv4->sendersIP)) + " Sent to " + ipv4BytesToString(netToHost32(ipv4->reciveIP)), (ipv4Content + icmpContent).c_str(), 4, 181, 54);
         }
-        
-    }
-    else{
-        self->pktInfo->add("Unkown", "idk", 140, 140, 140);
+        if (ipv4->protocol == 17){
+            //UDP
+            const UDP_HEADER* udp =  (const UDP_HEADER*)(packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
+            const byte* udpPayload = (const byte*)(packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER) + sizeof(UDP_HEADER));
+            std::string binaryPayload;
+            for (int i = 0; i < netToHost16(udp->len) - sizeof(UDP_HEADER); i++) {
+                for (int bit = 7; bit >= 0; bit--) {
+                    binaryPayload.push_back(((udpPayload[i] >> bit) & 1) ? '1' : '0');
+                }
+                binaryPayload.push_back(' ');
+            }
+
+            std::string udpContent = std::string("UDP(User Datagram Protocol):\n") +
+                "SrcPort: " + std::to_string(netToHost16(udp->srcPort)) + "\n" +
+                "DstPort: " + std::to_string(netToHost16(udp->dstPort)) + "\n" +
+                "Length: " + std::to_string(netToHost16(udp->len)) + "\n" +
+                "Payload in binary\n: " + binaryPayload + "\n";
+            self->pktInfo->add("UDP " + ipv4BytesToString(netToHost32(ipv4->sendersIP)) + "Port:" + std::to_string(netToHost16(udp->srcPort))+ " To " + ipv4BytesToString(netToHost32(ipv4->reciveIP)) + "Port:" + std::to_string(netToHost16(udp->dstPort)), (ipv4Content + udpContent).c_str(), 160, 84, 222);
+        }
+        if (ipv4->protocol == 6){
+            //TCP
+            const TCP_HEADER* tcp =  (const TCP_HEADER*)(packet + sizeof(ETHERNET_HEADER) + sizeof(IPV4_HEADER));
+            int ipHeaderLen = (ipv4->version_IHL & 0x0F) * 4;
+            int tcpHeaderLen = ((tcp->dataOffReservedAndNS >> 4) & 0xF) * 4;
+            int totalLen = netToHost16(ipv4->totalLen);
+            int tcpPayloadLen = totalLen - (ipHeaderLen + tcpHeaderLen);
+            const uint8_t* tcpPayload = (const uint8_t*)(packet + sizeof(ETHERNET_HEADER) + ipHeaderLen + tcpHeaderLen);
+            std::string binaryPayload;
+            if (tcpPayloadLen > 0) {
+                binaryPayload.reserve(tcpPayloadLen * 9);
+                for (int i = 0; i < tcpPayloadLen; i++) {
+                    for (int bit = 7; bit >= 0; bit--) {
+                        binaryPayload.push_back(((tcpPayload[i] >> bit) & 1) ? '1' : '0');
+                    }
+                    binaryPayload.push_back(' ');
+                }
+            } else {
+                binaryPayload = "(no payload)";
+            }
+            std::string tcpContent = std::string("TCP(Transmission Control Protocol):\n") +
+                "SrcPort: " + std::to_string(netToHost16(tcp->srcPort)) + "\n" +
+                "DstPort: " + std::to_string(netToHost16(tcp->destPort)) + "\n" +
+                "SeqNum: " + std::to_string(netToHost16(tcp->seqNum)) + "\n" +
+                "AckNum: " + std::to_string(netToHost16(tcp->ackNum)) + "\n" +
+                "Flag: " + std::to_string(tcp->flag) + "\n" +
+                "WindowSize: " + std::to_string(netToHost16(tcp->windowSize)) + "\n" +
+                "Payload in binary:\n" + binaryPayload + "\n";
+            self->pktInfo->add("TCP " + ipv4BytesToString(netToHost32(ipv4->sendersIP)) + "Port:" + std::to_string(netToHost16(tcp->srcPort))+ " To " + ipv4BytesToString(netToHost32(ipv4->reciveIP)) + "Port:" + std::to_string(netToHost16(tcp->destPort)), (ipv4Content + tcpContent).c_str(), 255, 84, 84);
+        }
     }
 }
