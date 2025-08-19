@@ -4,13 +4,13 @@
 #include "InternetUtils.h"
 #include <thread>
 #include <atomic>
-
+#include"Handler.h"
 class Sniffer {
 public:
     explicit Sniffer(PacketInfo* pktInfoPtr);
     ~Sniffer();
     bool openDefaultDevice();
-    void start();
+    void start(Handler* hndr);
     void stop();
     bool isRunning() const { return running; }
 

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include "Defng.h"
-
+#include<format>
 inline bool isMachineBigEndian() {
     const uint32_t num = 0x00000001;
     return (*((const uint8_t*)&num) == 0x00);
@@ -39,7 +39,7 @@ inline bytes_2 netToHost16(bytes_2 value){
     if (isMachineBigEndian()){return value;}
     else {return switchByteOrder16(value);}
 }
-inline bytes_4 netToHost31(bytes_4 value){
+inline bytes_4 netToHost32(bytes_4 value){
     if (isMachineBigEndian()){return value;}
     else {return switchByteOrder32(value);}
 }
@@ -79,4 +79,25 @@ inline std::string bArrayToIPv4String(const uint8_t arr[4]) {
            std::to_string(arr[1]) + "." +
            std::to_string(arr[2]) + "." +
            std::to_string(arr[3]);
+}
+inline std::string byteToHex(uint8_t b) {
+    char buf[3];
+    std::sprintf(buf, "%02X", b);
+    return std::string(buf);
+}
+inline std::string bArrayToMACString(const uint8_t arr[6]) {
+    return byteToHex(arr[0]) + ":" + byteToHex(arr[1]) + ":" +
+           byteToHex(arr[2]) + ":" + byteToHex(arr[3]) + ":" +
+           byteToHex(arr[4]) + ":" + byteToHex(arr[5]);
+}
+inline std::string ipv4BytesToString(bytes_4 ip) {
+    byte b1 = (ip >> 24) & 0xFF;
+    byte b2 = (ip >> 16) & 0xFF;
+    byte b3 = (ip >> 8)  & 0xFF;
+    byte b4 = ip & 0xFF;
+
+    return std::to_string(b1) + "." +
+           std::to_string(b2) + "." +
+           std::to_string(b3) + "." +
+           std::to_string(b4);
 }

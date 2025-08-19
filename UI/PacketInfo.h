@@ -15,7 +15,9 @@ private:
     QListWidget* listWidget;
 
 public:
-    PacketInfo(QWidget* window);
+    PacketInfo(QWidget* parent);
     ~PacketInfo();
     void add(const std::string &text, const std::string &info, int r, int g, int b);
+    void setPosAndSize(int x, int y, int width, int height);
+    void clear();
 };
