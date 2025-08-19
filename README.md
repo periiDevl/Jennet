@@ -1,5 +1,5 @@
 # Jennet
  Jennet(Jnet)
 no the hard coded local ip for testing is not my real local ip lol
-RANDOM SCREENSHOT
-<img width="1059" height="718" alt="image" src="https://github.com/user-attachments/assets/45f23ef3-959e-4d3b-8c02-c99b320a604c" />
+SCREENSHOT
+<img width="1316" height="552" alt="image" src="https://github.com/user-attachments/assets/e230e378-842c-4404-8cd0-5c29630e9651" />
