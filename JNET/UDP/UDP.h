@@ -42,7 +42,7 @@ void UDP::addText(const std::string& text) {
 }
 void UDP::addPayload(const std::vector<byte>& data)
 {
-    payload = data;    
+    payload = data;
 }
 
 void UDP::applyChecksum() {
