@@ -214,9 +214,7 @@ int main(int argc, char *argv[]) {
             bytes_4 destIPbytes = convertToBigEndian32(v4addr(dstIPStr));
             memcpy(json.arp.header->reciveProtolAdrr, &destIPbytes, 4);
             if (json.arp.header->operation == 1) {
-                memset(json.arp.header->reciveAdrr, 0, 6);
-            } else {
-                memcpy(json.arp.header->reciveAdrr, dstMac, 6);
+                memset(eth.dstMac, 0xFF, 6);
             }
             
         }
