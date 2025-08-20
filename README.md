@@ -34,9 +34,13 @@ sudo ./jnet
 ```
 ### on Windows
 Visit : https://npcap.com/
+
 Install : "Npcap 1.83 installer for Windows"
+
 <img width="731" height="39" alt="image" src="https://github.com/user-attachments/assets/18b78c09-e0e8-4caf-98ae-6e7a8d9cd7c2" />
+
 Run the downloaded exe (npcap-1.83.exe)
+
 #### and make sure to select this checkbox:
 <img width="499" height="388" alt="npcap_install_20210301" src="https://github.com/user-attachments/assets/72cd62b9-1940-43f6-abde-f58d9fd0ebdc" />
 
