@@ -1,5 +1,6 @@
 # Jennet - Packet Sniffer & Manipulator
-<img width="347" height="377" alt="image" src="https://github.com/user-attachments/assets/8ee994ad-f952-4cd0-aa6e-49a300605f8a" />
+
+<img width="448" height="487" alt="jnet" src="https://github.com/user-attachments/assets/163f7ca1-fe3c-46c3-a1be-a8b69323042a" />
 
 ### by Jonathan perii
 
