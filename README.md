@@ -52,7 +52,6 @@ then just run the jennet exe!
 ```bash
 sudo ./Jnet Addresses.json Packet.json
 ```
-```bash
 
 Addresses.json example found in this repository in the JSONS/ folder
 
