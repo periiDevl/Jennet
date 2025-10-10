@@ -9,6 +9,8 @@ Jennet/Jnet is a program I created using C++ and libpcap, and cJSON and QT5 for 
 Jennet is still a work in progress but its has some great features like:
 Sniffing and Packet crafting TCP, UDP, ARP and ICMP (more will added)
 
+## Screenshots:
+<img width="1316" height="552" alt="image" src="https://github.com/user-attachments/assets/e230e378-842c-4404-8cd0-5c29630e9651" />
 
 ## Installation
 visit : https://perii.itch.io/jennet-jnet-packet-manipulator
@@ -56,7 +58,3 @@ sudo ./Jnet Addresses.json Packet.json
 Addresses.json example found in this repository in the JSONS/ folder
 
 Packet.json examples found in this repository in the JSONS/ folder (arp example, tcp example...)
-
-## Screenshots:
-<img width="1316" height="552" alt="image" src="https://github.com/user-attachments/assets/e230e378-842c-4404-8cd0-5c29630e9651" />
-
