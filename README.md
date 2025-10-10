@@ -47,6 +47,17 @@ Run the downloaded exe (npcap-1.83.exe)
 
 then just run the jennet exe!
 
+## Jennet CLI:
+(Jennet CLI is only for linux right now)
+```bash
+sudo ./Jnet Addresses.json Packet.json
+```
+```bash
+
+Addresses.json example found in this repository in the JSONS/ folder
+
+Packet.json examples found in this repository in the JSONS/ folder (arp example, tcp example...)
+
 ## Screenshots:
 <img width="1316" height="552" alt="image" src="https://github.com/user-attachments/assets/e230e378-842c-4404-8cd0-5c29630e9651" />
 
