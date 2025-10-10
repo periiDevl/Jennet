@@ -118,4 +118,20 @@ public:
         std::cerr << "Gateway MAC not found in ARP cache. Try pinging gateway first.\n";
         return false;
     }
+    static std::array<byte, 6> stringToMac(const std::string& macStr) {
+        if (macStr.length() != 17)
+            throw std::invalid_argument("Invalid MAC string length");
+
+        std::array<byte, 6> mac{};
+        unsigned int vals[6];
+
+        if (sscanf(macStr.c_str(), "%02x:%02x:%02x:%02x:%02x:%02x",
+                &vals[0], &vals[1], &vals[2], &vals[3], &vals[4], &vals[5]) != 6)
+            throw std::invalid_argument("Invalid MAC format");
+
+        for (int i = 0; i < 6; ++i)
+            mac[i] = static_cast<byte>(vals[i]);
+
+        return mac;
+    }
 };
