@@ -1,0 +1,10 @@
+{
+    "Adresses":
+    {
+        "interface":"",
+        "srcIp":"",
+        "srcMac":"",
+        "dstIp":"",
+        "dstMac":""
+    }
+}
