@@ -295,7 +295,7 @@ int main() {
     std::string srcMac = "";
     std::string dstMac = "";
     const char* srcIP = "";
-    const char* dstIP = "";
+    const char* dstIP = "1.1.1.1";
     
     sendTCPSyn(interface, srcMac, dstMac, srcIP, dstIP, 12345, 80);
     
@@ -303,7 +303,7 @@ int main() {
 
     sendICMPPing(interface, srcMac, dstMac, srcIP, dstIP);
     
-    sendUDP(interface, srcMac, dstMac, srcIP, dstIP, 54321, 53, "Hello UDP!");
+    sendUDP(interface, srcMac, dstMac, srcIP, dstIP, 54321, 600, "Hello UDP!");
     
     sendARPRequest(interface, srcMac, srcIP, "192.168.1.50");
     
