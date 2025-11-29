@@ -1,20 +1,20 @@
 #!/bin/bash
 set -e
 
-echo "[+] Checking for Qt5 development packages..."
+echo "Checking for Qt5 development packages..."
 if ! dpkg -s qtbase5-dev &>/dev/null; then
-    echo "[+] Installing Qt5 development packages..."
+    echo "Installing Qt5 development packages..."
     sudo apt-get update
     sudo apt-get install -y qtbase5-dev qtbase5-dev-tools pkg-config build-essential
 fi
 
 if command -v g++-13 &>/dev/null; then
     CXX=g++-13
-    echo "[+] Using g++-13"
+    echo "Using g++-13"
 elif command -v g++ &>/dev/null; then
     CXX=g++
     GCC_VER=$(g++ -dumpversion)
-    echo "[+] Detected GCC version: $GCC_VER"
+    echo "Detected GCC version: $GCC_VER"
     GCC_MAJOR=$(echo $GCC_VER | cut -d. -f1)
     if [ $GCC_MAJOR -lt 13 ]; then
         echo "[!] ERROR: GCC < 13 does not support <format>. Installing g++-13..."
@@ -36,11 +36,11 @@ if [ ! -f "$PCAPPP_DIR/lib/libPcap++.a" ]; then
     exit 1
 fi
 
-echo "[+] Collecting source files..."
+echo "Collecting source files..."
 SRC_FILES=$(find . -name '*.cpp')
 echo "$SRC_FILES"
 
-echo "[+] Getting Qt5 compile and link flags..."
+echo "Getting Qt5 compile and link flags..."
 QT_CFLAGS=$(pkg-config --cflags Qt5Widgets)
 QT_LIBS=$(pkg-config --libs Qt5Widgets)
 
@@ -49,10 +49,10 @@ if [ -z "$QT_CFLAGS" ] || [ -z "$QT_LIBS" ]; then
     exit 1
 fi
 
-echo "[+] Qt5 compile flags: $QT_CFLAGS"
-echo "[+] Qt5 link flags: $QT_LIBS"
+echo "Qt5 compile flags: $QT_CFLAGS"
+echo "Qt5 link flags: $QT_LIBS"
 
-echo "[+] Compiling Jennet with $CXX..."
+echo "Compiling Jennet with $CXX..."
 $CXX -std=c++20 -O2 -fPIC -Wall -Wextra \
     -o jnet $SRC_FILES \
     -I . \
@@ -67,6 +67,6 @@ $CXX -std=c++20 -O2 -fPIC -Wall -Wextra \
     $QT_LIBS \
     -static-libstdc++ -static-libgcc
 
-echo "[+] Compilation successful."
-echo "[+] Running Jennet..."
+echo "Compilation successful."
+echo "Running Jennet..."
 sudo ./jnet
